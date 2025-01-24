@@ -16,6 +16,7 @@ from PPlay.mouse import*
 import os
 
 pygame.font.init()
+pygame.mixer.init()
 
 last_die = 0
 def draw_health(surface, P1, P2):
@@ -68,6 +69,50 @@ def run_game_loop(surface,p1,p2,tempo,mapa,modo):
     diretorio_dayla = os.path.join(diretorio_personagens, 'dayla')
     diretorio_ayla = os.path.join(diretorio_personagens, 'Ayla')
     diretorio_drax = os.path.join(diretorio_personagens, 'Drax')
+
+    caminho_round_1 = os.path.join(diretorio_gameloop, 'assets', 'round_1.wav')
+    caminho_round_2 = os.path.join(diretorio_gameloop, 'assets', 'round_2.wav')
+    caminho_round_3 = os.path.join(diretorio_gameloop, 'assets', 'round_3.wav')
+    caminho_round_4 = os.path.join(diretorio_gameloop, 'assets', 'round_4.wav')
+    caminho_round_5 = os.path.join(diretorio_gameloop, 'assets', 'round_5.wav')
+    caminho_round_6 = os.path.join(diretorio_gameloop, 'assets', 'round_6.wav')
+    caminho_final = os.path.join(diretorio_gameloop, 'assets', 'final_round.wav')
+    caminho_ko = os.path.join(diretorio_gameloop, 'assets', 'ko.wav')
+    caminho_game = os.path.join(diretorio_gameloop, 'assets', 'game_set.wav')
+    caminho_musica1 = os.path.join(diretorio_gameloop, 'assets', 'music.wav')
+    caminho_musica2 = os.path.join(diretorio_gameloop, 'assets', 'music1.wav')
+    caminho_musica3 = os.path.join(diretorio_gameloop, 'assets', 'music2.wav')
+
+    round_1 = pygame.mixer.Sound(caminho_round_1)
+    round_2 = pygame.mixer.Sound(caminho_round_2)
+    round_3 = pygame.mixer.Sound(caminho_round_3)
+    round_4 = pygame.mixer.Sound(caminho_round_4)
+    round_5 = pygame.mixer.Sound(caminho_round_5)
+    round_6 = pygame.mixer.Sound(caminho_round_6)
+    final = pygame.mixer.Sound(caminho_final)
+    ko = pygame.mixer.Sound(caminho_ko)
+    game = pygame.mixer.Sound(caminho_game)
+    if mapa == 1:
+        musica1 = pygame.mixer.Sound(caminho_musica1)
+    elif mapa == 2:
+        musica1 = pygame.mixer.Sound(caminho_musica2)
+    elif mapa == 3:
+        musica1 = pygame.mixer.Sound(caminho_musica3)
+
+    musica1.set_volume(0.1)
+    round_1.set_volume(0.8)
+    round_2.set_volume(0.8)
+    round_3.set_volume(0.8)
+    round_4.set_volume(0.8)
+    round_5.set_volume(0.8)
+    round_6.set_volume(0.8)
+    final.set_volume(0.8)
+    ko.set_volume(0.8)
+    game.set_volume(0.8)
+
+    isSom = False
+    iskosom = False
+    isMusicRing = False
     # Configuração do loop
     font = pygame.font.SysFont("Arial", 72, bold=True)
     clock = pygame.time.Clock()
@@ -149,8 +194,16 @@ def run_game_loop(surface,p1,p2,tempo,mapa,modo):
             minutes = remaining_time // 60000
             seconds = (remaining_time % 60000) // 1000
 
+            porcentageP1 = max(0, (P1.knockback_speed - 2) / (30 - 2) * 100)
+            porcentageP2 = max(0, (P2.knockback_speed - 2) / (30 - 2) * 100)
 
+            porcentageP1 = int(porcentageP1)
+            porcentageP2 = int(porcentageP2)
 
+            text_porceP1 = font.render(f'{porcentageP1}%', True, (255, 0, 0)) 
+            text_porceP1_rect = text_porceP1.get_rect(center=(300, 115))
+            text_porceP2 = font.render(f'{porcentageP2}%', True, (255, 0, 0)) 
+            text_porceP2_rect = text_porceP2.get_rect(center=(1100, 115))
             # Exibe o timer no centro superior da tela
             timer_text = f"{minutes}:{seconds}"  # Formato MM:SS
             text_surface = font.render(timer_text, True, (255, 255, 255))  # Texto branco
@@ -165,6 +218,10 @@ def run_game_loop(surface,p1,p2,tempo,mapa,modo):
             # Desenha a caverna e obtém as plataformas
             plataformas = Mapa.draw(surface)
 
+            if not isMusicRing:
+                musica1.play(-1)
+                isMusicRing = True
+
             # Atualiza o personagem com as plataformas
             P1.update(keys, plataformas, P2,modo)
             P2.update(keys, plataformas, P1,modo)
@@ -176,7 +233,8 @@ def run_game_loop(surface,p1,p2,tempo,mapa,modo):
                     winer = "p2"
                 else:
                     winer = "draw"
-                
+                game.play()
+                musica1.stop()
                 return 2,winer
                 
 
@@ -185,17 +243,19 @@ def run_game_loop(surface,p1,p2,tempo,mapa,modo):
             surface.blit(PhotoP1,(20,20))
             surface.blit(PhotoP2,(surface.get_width() - 148, 20))
             surface.blit(text_surface, text_rect)
+            surface.blit(text_porceP1,text_porceP1_rect)
+            surface.blit(text_porceP2,text_porceP2_rect)
             if keybord.key_pressed("1"):
                 P1.draw(surface)
                 P2.draw(surface)
             else:
                 all_sprites.draw(surface)
 
-            
             # Atualiza a tela
             pygame.display.flip()
 
             if keybord.key_pressed("ESCAPE"):
+                musica1.stop()
                 return 0,''
 
             clock.tick(fps)
@@ -213,6 +273,10 @@ def run_game_loop(surface,p1,p2,tempo,mapa,modo):
             # Desenha a caverna e obtém as plataformas
             plataformas = Mapa.draw(surface)
 
+            if not isMusicRing:
+                musica1.play(-1)
+                isMusicRing = True
+
             # Atualiza o personagem com as plataformas
             P1.update(keys, plataformas, P2,modo)
             P2.update(keys, plataformas, P1,modo)
@@ -222,21 +286,60 @@ def run_game_loop(surface,p1,p2,tempo,mapa,modo):
                 text_surface = font.render(f"Round {round_atual}", True, (255, 255, 255))  # Texto branco
                 text_rect = text_surface.get_rect(center=(surface.get_width() // 2 - 10, surface.get_height() // 2))
                 surface.blit(text_surface, text_rect)
+                if round_atual == 1 and not isSom and (not P1.rounds_won >= (tempo//2)+1 or not P2.rounds_won >= (tempo//2)+1):
+                    round_1.play()
+                    isSom = True
+                    iskosom = False
+                elif round_atual == 2 and not isSom and (not P1.rounds_won >= (tempo//2)+1 or not P2.rounds_won >= (tempo//2)+1):
+                    round_2.play()
+                    isSom = True
+                    iskosom = False
+                elif round_atual == 3 and not isSom and (not P1.rounds_won >= (tempo//2)+1 or not P2.rounds_won >= (tempo//2)+1):
+                    round_3.play()
+                    isSom = True
+                    iskosom = False
+                elif round_atual == 4 and not isSom and (not P1.rounds_won >= (tempo//2)+1 or not P2.rounds_won >= (tempo//2)+1):
+                    round_4.play()
+                    isSom = True
+                    iskosom = False
+                elif round_atual == 5 and not isSom and (not P1.rounds_won >= (tempo//2)+1 or not P2.rounds_won >= (tempo//2)+1):
+                    round_5.play()
+                    isSom = True
+                    iskosom = False
+                elif round_atual == 6 and not isSom and (not P1.rounds_won >= (tempo//2)+1 or not P2.rounds_won >= (tempo//2)+1):
+                    round_6.play()
+                    isSom = True
+                    iskosom = False
+                elif round_atual > 6 and not isSom and (not P1.rounds_won >= (tempo//2)+1 or not P2.rounds_won >= (tempo//2)+1):
+                    final.play()
+                    isSom = True
+                    iskosom = False
                 if current_time - last_die >= 3000:
                     P1.allowMoviment = True
                     P2.allowMoviment = True
                     check_if_sum = False
+                    isSom = False
             
             if P1.die or P2.die:
+                if not iskosom:
+                    ko.play()
+                    iskosom = True
                 last_die = current_time
+
                 if not check_if_sum:
                     round_atual += 1
                     check_if_sum = True
+
+            
             
             if P1.rounds_won >= (tempo//2)+1:
                 winer = "p1"
+                game.play()
+                musica1.stop()
                 return 2,winer
             elif P2.rounds_won >= (tempo//2)+1:
+                game.play()
+                musica1.stop()
                 winer = "p2"
                 return 2,winer
 
@@ -255,6 +358,7 @@ def run_game_loop(surface,p1,p2,tempo,mapa,modo):
             pygame.display.flip()
 
             if keybord.key_pressed("ESCAPE"):
+                musica1.stop()
                 return 0,''
 
             clock.tick(fps)

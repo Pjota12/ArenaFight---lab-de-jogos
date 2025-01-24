@@ -32,7 +32,7 @@ class Templo:
         # Desenhar as plataformas
         surface.blit(self.plataforma_p, (240, 490))
         surface.blit(self.plataforma1, (360, 319))
-        surface.blit(self.plataforma2,(720,319))
+        surface.blit(self.plataforma2,(690,319))
 
         # Retorna informações sobre as plataformas
         return self.plataformas

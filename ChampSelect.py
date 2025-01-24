@@ -2,7 +2,9 @@ import pygame
 from pygame.locals import*
 from PPlay.gameimage import*
 from PPlay.mouse import*
+import os
 
+pygame.mixer.init()
 class Ayla(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -105,14 +107,24 @@ drax = Drax()
 dayla = Dayla()
 wander = Wander()
 
-# Desenhar sprites
-#     all_sprites.draw(surface)
-#     all_sprites.update()
+diretorio = os.path.dirname(__file__)
+caminho_musica = os.path.join(diretorio, 'assets', 'select_your_character.wav')
 
-def drawChampionsSelector(surface, p1, p2, p1x, p1y, p2x, p2y,game_estage):
+som1 = pygame.mixer.Sound(caminho_musica)
+som1.set_volume(0.8)
+
+
+def drawChampionsSelector(surface, p1, p2, p1x, p1y, p2x, p2y,game_estage,som):
+    global som1
     mouse = Mouse()
     p1square = GameImage("./assets/seletorP1.png")
     p2square = GameImage("./assets/seletorP2.png")
+
+    if not som:
+        som1.play()
+        som = True
+
+    
 
     # Carregar e desenhar o fundo
     background = pygame.image.load("./assets/backSelector.png").convert()
@@ -200,7 +212,7 @@ def drawChampionsSelector(surface, p1, p2, p1x, p1y, p2x, p2y,game_estage):
     if mouse.is_over_area([1037,658],[1338,719]) and mouse.is_button_pressed(1):
         game_estage = 1
 
-    return p1, p2, p1x, p1y, p2x, p2y,game_estage
+    return p1, p2, p1x, p1y, p2x, p2y,game_estage,som
 
 
 

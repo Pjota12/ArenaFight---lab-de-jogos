@@ -176,7 +176,7 @@ class Dayla(pygame.sprite.Sprite):
         diretorio_Dayla = os.path.join(diretorio_personagens, 'dayla')
 
         # Carregar o spritesheet
-        self.sprite_sheet = pygame.image.load(os.path.join(diretorio_Dayla, 'EitanSpriteSheet.png')).convert_alpha()
+        self.sprite_sheet = pygame.image.load(os.path.join(diretorio_Dayla, 'DaylaSpriteSheet.png')).convert_alpha()
         self.sprites = {action: [] for action in [
             'idle','die'
         ]}

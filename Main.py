@@ -26,7 +26,7 @@ sair = False
 
 #diretorio
 diretorio = os.path.dirname(__file__)
-caminho_musica = os.path.join(diretorio, 'assets', 'music.wav')
+caminho_musica = os.path.join(diretorio, 'assets', 'main.wav')
 
 pygame.mixer.music.load(caminho_musica)
 pygame.mixer.music.set_volume(0.5)
@@ -52,6 +52,8 @@ p2 = 1
 game_estage = 0
 winner = ''
 
+#controlador da musica
+isSom = False
 
 # Função para retornar ao menu
 def returnMenu():
@@ -63,20 +65,22 @@ def returnMenu():
 while not sair:
     returnMenu()
     
-    if estado != "jogando" and not musica_tocando:
+    if game_estage == 0 and not musica_tocando:
         pygame.mixer.music.play(-1)  # Toca a música em loop
         musica_tocando = True  # Atualiza o estado da música
-    elif estado == "jogando" and musica_tocando:
+    elif game_estage != 0 and musica_tocando:
         pygame.mixer.music.stop()  # Para a música
         musica_tocando = False  # Atualiza o estado da música
 
     # Controle de estados
     if estado == "menu":
         estado, sair = haddleMenuEvents(window)
+        isSom = False
     elif estado == "jogando":
         if game_estage == 0:
-            p1, p2, p1x, p1y, p2x, p2y,game_estage = drawChampionsSelector(pygame_surface, p1, p2, p1x, p1y, p2x, p2y,game_estage)
+            p1, p2, p1x, p1y, p2x, p2y,game_estage,isSom = drawChampionsSelector(pygame_surface, p1, p2, p1x, p1y, p2x, p2y,game_estage,isSom)
         elif game_estage == 1:
+            isSom = False
             game_estage,winner = run_game_loop(pygame_surface,p1,p2,tempo,mapa,modo)
         elif game_estage == 2:
             game_estage,estado,winner = drawWinnerScream(pygame_surface,p1,p2,winner,game_estage,estado)

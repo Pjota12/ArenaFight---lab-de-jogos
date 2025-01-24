@@ -6,13 +6,42 @@ import os
 class DaylaP1(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        diretorio_EitanClass = os.path.dirname(__file__)
-        diretorio_assets = os.path.join(diretorio_EitanClass, 'assets')
+        diretorio_DaylaClass = os.path.dirname(__file__)
+        diretorio_assets = os.path.join(diretorio_DaylaClass, 'assets')
         diretorio_personagens = os.path.join(diretorio_assets, 'Personagens')
-        diretorio_Eitan = os.path.join(diretorio_personagens, 'dayla')
+        diretorio_dayla = os.path.join(diretorio_personagens, 'dayla')
+
+        pygame.mixer.init()
+        caminho_musica = os.path.join(diretorio_DaylaClass, 'assets', '5.ogg')
+        caminho_musica_1 = os.path.join(diretorio_DaylaClass, 'assets', '6.ogg')
+        caminho_musica_2 = os.path.join(diretorio_DaylaClass, 'assets', '7.ogg')
+        caminho_musica_3 = os.path.join(diretorio_DaylaClass, 'assets', '14.ogg')
+        self.som1 = pygame.mixer.Sound(caminho_musica)
+        self.som2 = pygame.mixer.Sound(caminho_musica_2)
+        self.som3 = pygame.mixer.Sound(caminho_musica_1)
+        self.som4 = pygame.mixer.Sound(caminho_musica_3)
+        self.som1.set_volume(0.5)
+        self.som2.set_volume(0.5)
+        self.som3.set_volume(0.5)
+        self.som4.set_volume(0.5)
+        self.somtime = 1
+
+        caminho_dayla_1 =  os.path.join(diretorio_dayla, '01_dayla.mp3')
+        caminho_dayla_2 =  os.path.join(diretorio_dayla, '02_dayla.mp3')
+        caminho_dayla_3 =  os.path.join(diretorio_dayla, '03_dayla.mp3')
+        caminho_dayla_4 =  os.path.join(diretorio_dayla, '04_dayla.mp3')
+        self.grito1 = pygame.mixer.Sound(caminho_dayla_1)
+        self.grito2 = pygame.mixer.Sound(caminho_dayla_2)
+        self.grito3 = pygame.mixer.Sound(caminho_dayla_3)
+        self.grito4 = pygame.mixer.Sound(caminho_dayla_4)
+        self.grito1.set_volume(0.3)
+        self.grito2.set_volume(0.3)
+        self.grito3.set_volume(0.3)
+        self.grito4.set_volume(0.3)
+        self.atacksond = False
 
         # Carregar o spritesheet
-        self.sprite_sheet = pygame.image.load(os.path.join(diretorio_Eitan, 'DaylaSpriteSheet.png')).convert_alpha()
+        self.sprite_sheet = pygame.image.load(os.path.join(diretorio_dayla, 'DaylaSpriteSheet.png')).convert_alpha()
 
         # Inicializar as animações
         self.sprites = {action: [] for action in [
@@ -148,6 +177,19 @@ class DaylaP1(pygame.sprite.Sprite):
             self.is_hit = True
             self.cooldown_timer = 15  # Frames de invulnerabilidade
 
+            if atacker.current_action == 'super_attack':
+                self.som4.play()
+            else:
+                if self.somtime == 1:
+                    self.som1.play()
+                    self.somtime = 2
+                elif self.somtime == 2:
+                    self.som2.play()
+                    self.somtime = 3
+                elif self.somtime == 3:
+                    self.som3.play()
+                    self.somtime = 1
+
             # Define o multiplicador de knockback de forma estática para cada golpe
             self.knockback_multiplier = atacker.knockbak_force / 10
 
@@ -159,7 +201,7 @@ class DaylaP1(pygame.sprite.Sprite):
             ]
 
             if modo == 0:
-                self.knockback_speed += atacker.addknockback
+                self.knockback_speed *= atacker.addknockback
             if modo == 1:
                 self.life -= atacker.demage
             if atacker.specialBar <= 100:
@@ -174,7 +216,11 @@ class DaylaP1(pygame.sprite.Sprite):
 
 
     def handle_actions(self, keys):
-        if self.allowMoviment:
+        if self.die:
+            self.change_action('die')
+        elif self.is_hit:
+            self.change_action('hit')
+        elif self.allowMoviment:
             if not self.on_ground:  # Verifica se está no ar
                 if keys[pygame.K_c] or keys[pygame.K_v] or keys[pygame.K_f]:
                     self.change_action('air_attack')
@@ -190,10 +236,10 @@ class DaylaP1(pygame.sprite.Sprite):
 
                 if keys[pygame.K_a]:
                     self.flip = True
-                    self.rect.x -= self.speed * 2
+                    self.rect.x -= self.speed * 1.5
                 if keys[pygame.K_d]:
                     self.flip = False
-                    self.rect.x += self.speed * 2
+                    self.rect.x += self.speed * 1.5
                 
                 if self.die:
                     self.change_action('die')
@@ -245,10 +291,6 @@ class DaylaP1(pygame.sprite.Sprite):
                         self.change_action('walk')
                 elif keys[pygame.K_w]:
                     self.jump()
-                elif self.is_hit:
-                    self.change_action('hit')
-                elif self.die:
-                    self.change_action('die')
                 else:
                     if self.velocity_y < 0 and not self.is_hit:
                         self.change_action('up')
@@ -334,20 +376,24 @@ class DaylaP1(pygame.sprite.Sprite):
         #ATAQUER CONTROLADOR
         if self.is_doing_special:
             self.cooldown_timer_special -= 1
+            if not self.atacksond:
+                self.grito4.play()
+                self.atacksond = True
             if self.cooldown_timer_special <= 0:
                 self.specialBar = 0
                 self.is_doing_special = False
                 self.change_action('idle')
+                self.atacksond = False
         
-        if not self.is_attacking['attack1'] and keys[pygame.K_c] and (self.current_time - self.last_attack_time['attack1'] >= 1300):
+        if not self.is_attacking['attack1'] and keys[pygame.K_c] and (self.current_time - self.last_attack_time['attack1'] >= 1000):
             self.cooldown_timer_attacks['attack1'] = self.attacks_duration['attack1']
             self.last_attack_time['attack1'] = self.current_time
         
-        if not self.is_attacking['attack2'] and keys[pygame.K_v] and (self.current_time - self.last_attack_time['attack2'] >= 3500):
+        if not self.is_attacking['attack2'] and keys[pygame.K_v] and (self.current_time - self.last_attack_time['attack2'] >= 2700):
             self.cooldown_timer_attacks['attack2'] = self.attacks_duration['attack2']
             self.last_attack_time['attack2'] = self.current_time
         
-        if not self.is_attacking['attack3'] and keys[pygame.K_f] and (self.current_time - self.last_attack_time['attack3'] >= 4500):
+        if not self.is_attacking['attack3'] and keys[pygame.K_f] and (self.current_time - self.last_attack_time['attack3'] >= 3500):
             self.cooldown_timer_attacks['attack3'] = self.attacks_duration['attack3']
             self.last_attack_time['attack3'] = self.current_time
         
@@ -395,24 +441,36 @@ class DaylaP1(pygame.sprite.Sprite):
 
         if self.is_attacking['attack1']:
             self.cooldown_timer_attacks['attack1'] -=1
+            if not self.atacksond:
+                self.grito1.play()
+                self.atacksond = True
             if self.cooldown_timer_attacks['attack1'] <= 0:
-                self.cooldown_timer_attacks['attack1'] = 0
+                self.cooldown_timer_attacks['attack1'] = -1
                 self.is_attacking['attack1'] = False
                 self.change_action('idle')
+                self.atacksond = False
         
         if self.is_attacking['attack2']:
             self.cooldown_timer_attacks['attack2'] -=1
+            if not self.atacksond:
+                self.grito2.play()
+                self.atacksond = True
             if self.cooldown_timer_attacks['attack2'] <= 0:
-                self.cooldown_timer_attacks['attack2'] = 0
+                self.cooldown_timer_attacks['attack2'] = -1
                 self.is_attacking['attack2'] = False
                 self.change_action('idle')
+                self.atacksond = False
 
         if self.is_attacking['attack3']:
             self.cooldown_timer_attacks['attack3'] -=1
+            if not self.atacksond:
+                self.grito3.play()
+                self.atacksond = True
             if self.cooldown_timer_attacks['attack3'] <= 0:
-                self.cooldown_timer_attacks['attack3'] = 0
+                self.cooldown_timer_attacks['attack3'] = -1
                 self.is_attacking['attack3'] = False
                 self.change_action('idle')
+                self.atacksond = False
         
         if self.is_blocking:
             self.cooldown_timer_block -= 1
@@ -509,6 +567,7 @@ class DaylaP1(pygame.sprite.Sprite):
         elif modo == 1 and self.personagem_rect.x < -100 or self.personagem_rect.x > 1500 or self.personagem_rect.y > 750 or self.life <= 0:
             self.die = True
             self.die_moment = self.current_time
+            self.allowMoviment = False
     def restart(self):
         self.rect.center = (300, 370)
         self.die = False
